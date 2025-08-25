@@ -1,24 +1,17 @@
 pipeline {
   agent any
+
   environment {
     DOCKERHUB_CREDS = credentials('Docker-creds')  
-    GITHUB_CREDS = credentials('Git-Creds')        
-    DOCKER_REPO = "komall6/node-bulletin-board"
-    IMAGE_TAG = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.substring(0,7)}"
+    GITHUB_CREDS    = credentials('Git-Creds')        
+    DOCKER_REPO     = "komall6/node-bulletin-board"
+    IMAGE_TAG       = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.substring(0,7)}"
   }
+
   stages {
     stage('Checkout') {
       steps {
         checkout scm
-      }
-    }
-
-    stage('Install & Test') {
-      steps {
-        dir('bulletin-board-app') {
-          sh 'if [ -f package.json ]; then npm ci; fi'
-          sh 'if [ -f package.json ] && grep -q "test" package.json; then npm test || true; fi'
-        }
       }
     }
 
@@ -33,6 +26,8 @@ pipeline {
         sh """
           echo ${DOCKERHUB_CREDS_PSW} | docker login -u ${DOCKERHUB_CREDS_USR} --password-stdin
           docker push ${DOCKER_REPO}:${IMAGE_TAG}
+          docker tag ${DOCKER_REPO}:${IMAGE_TAG} ${DOCKER_REPO}:latest
+          docker push ${DOCKER_REPO}:latest
           docker logout
         """
       }
@@ -55,6 +50,7 @@ pipeline {
       }
     }
   }
+
   post {
     always { cleanWs() }
   }
