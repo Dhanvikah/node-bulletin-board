@@ -46,13 +46,13 @@ pipeline {
 
         stage('Git Commit & Push for ArgoCD Sync') {
             steps {
-                script {
+                withCredentials([string(credentialsId: 'github-push-token', variable: 'GITHUB_TOKEN')]) {
                     sh """
                         git config user.email "jenkins@ci.com"
                         git config user.name "Jenkins"
                         git add helm/values.yaml
                         git commit -m "Update image tag to ${BUILD_NUMBER}" || echo "No changes to commit"
-                        git push origin master
+                        git push https://$GITHUB_TOKEN@github.com/Dhanvikah/node-bulletin-board.git HEAD:master
                     """
                 }
             }
