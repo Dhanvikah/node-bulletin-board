@@ -15,8 +15,10 @@ pipeline {
 
     stage('Install & Test') {
       steps {
-        sh 'if [ -f package.json ]; then npm ci; fi'
-        sh 'if [ -f package.json ] && grep -q \"test\" package.json; then npm test || true; fi'
+        dir('bulletin-board-app') {
+          sh 'if [ -f package.json ]; then npm ci; fi'
+          sh 'if [ -f package.json ] && grep -q "test" package.json; then npm test || true; fi'
+        }
       }
     }
 
@@ -26,10 +28,8 @@ pipeline {
       }
     }
 
-
     stage('Login & Push Docker image') {
       steps {
-
         sh """
           echo ${DOCKERHUB_CREDS_PSW} | docker login -u ${DOCKERHUB_CREDS_USR} --password-stdin
           docker push ${DOCKER_REPO}:${IMAGE_TAG}
@@ -40,8 +40,7 @@ pipeline {
 
     stage('Update Helm values & push to Git') {
       steps {
-        dir('helm/node-bulletin-board') {
-
+        dir('helm') {
           sh "sed -i 's/tag: .*/tag: \"${IMAGE_TAG}\"/' values.yaml || true"
 
           sh "git config user.email 'jenkins@ci.local' || true"
