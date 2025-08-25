@@ -11,11 +11,11 @@ pipeline {
 
     stages {
         stage('Checkout') {
-            steps {
-                git branch: 'main', 
-                    credentialsId: "${GIT_CREDENTIALS}", 
-                    url: 'https://github.com/Dhanvikah/node-bulletin-board.git'
-            }
+          steps {
+            git branch: 'master',
+              credentialsId: "${GIT_CREDENTIALS}",
+              url: 'https://github.com/Dhanvikah/node-bulletin-board.git'
+            } 
         }
 
         stage('Build') {
