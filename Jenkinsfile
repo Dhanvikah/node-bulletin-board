@@ -18,7 +18,7 @@ pipeline {
     stage('Build Docker image') {
       steps {
         script {
-          sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest -f bulletd-board-app/Dockerfile bulletd-board-app"
+          sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest -f bulletin-board-app/Dockerfile bulletin-board-app"
         }
       }
     }
