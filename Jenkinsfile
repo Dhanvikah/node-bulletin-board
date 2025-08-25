@@ -45,7 +45,9 @@ pipeline {
 
           sh "git add values.yaml"
           sh "git commit -m 'ci: bump image tag to ${IMAGE_TAG}' || echo 'no changes to commit'"
-          sh "git push origin HEAD:${env.BRANCH_NAME}"
+          script {
+            def branch = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
+            sh "git push origin HEAD:${branch}"
         }
       }
     }
