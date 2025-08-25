@@ -6,8 +6,9 @@ image:
   pullPolicy: IfNotPresent
 
 service:
-  type: ClusterIP
-  port: 8080
+  type: NodePort
+  port: 80
+  targetPort: 3000    # match Node.js app port
 
 ingress:
   enabled: true
