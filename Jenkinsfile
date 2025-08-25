@@ -61,9 +61,15 @@ pipeline {
         stage('Deploy via ArgoCD') {
             steps {
                 script {
-                      sh "argocd app sync ${APP_NAME} --grpc-web --server <ARGOCD_SERVER> --auth-token <ARGOCD_TOKEN>"
+                    sh "argocd app sync ${APP_NAME} --grpc-web --server <ARGOCD_SERVER> --auth-token <ARGOCD_TOKEN>"
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
         }
     }
 }
