@@ -5,7 +5,7 @@ pipeline {
         DOCKERHUB_USER = 'komall6'                   
         DOCKERHUB_REPO = 'node-bulletin-board'       
         APP_NAME = 'node-bulletin-board'             
-        DOCKER_CREDENTIALS = 'dockerhub-creds'       
+        DOCKER_CREDENTIALS = 'Docker-creds'       
     }
 
     stages {
