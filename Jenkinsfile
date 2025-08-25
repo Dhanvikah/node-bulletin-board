@@ -4,29 +4,20 @@ pipeline {
     environment {
         DOCKERHUB_USER = 'komall6'                   
         DOCKERHUB_REPO = 'node-bulletin-board'       
-        APP_NAME = 'node-bulletin-board'
-        DOCKER_CREDENTIALS = 'Docker-creds'       
-        GIT_CREDENTIALS = 'Git-Creds'            
+        APP_NAME = 'node-bulletin-board'             
+        DOCKER_CREDENTIALS = 'dockerhub-creds'       
     }
 
     stages {
-        stage('Checkout') {
-          steps {
-            git branch: 'master',
-              credentialsId: "${GIT_CREDENTIALS}",
-              url: 'https://github.com/Dhanvikah/node-bulletin-board.git'
-            } 
-        }
-
         stage('Build') {
             steps {
-                sh 'npm install --prefix bulletin-board-app/backend'
+                sh 'npm install --prefix bulletin-board-app'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'npm test --prefix bulletin-board-app/backend || echo "No tests defined"'
+                sh 'npm test --prefix bulletin-board-app || echo "No tests defined"'
             }
         }
 
@@ -61,7 +52,7 @@ pipeline {
                         git config user.name "Jenkins"
                         git add helm/values.yaml
                         git commit -m "Update image tag to ${BUILD_NUMBER}" || echo "No changes to commit"
-                        git push origin main
+                        git push origin master
                     """
                 }
             }
@@ -70,7 +61,7 @@ pipeline {
         stage('Deploy via ArgoCD') {
             steps {
                 script {
-                    sh "argocd app sync ${APP_NAME} --grpc-web --server <ARGOCD_SERVER> --auth-token <ARGOCD_TOKEN>"
+                      sh "argocd app sync ${APP_NAME} --grpc-web --server <ARGOCD_SERVER> --auth-token <ARGOCD_TOKEN>"
                 }
             }
         }
