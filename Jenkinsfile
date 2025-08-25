@@ -26,7 +26,7 @@ pipeline {
     stage('Push Docker image') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'Docker-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-          sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+          sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
           sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
           sh "docker push ${IMAGE_NAME}:latest"
         }
@@ -37,23 +37,35 @@ pipeline {
       steps {
         dir('helm') {
           withCredentials([usernamePassword(credentialsId: 'Git-Creds', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
-            sh """
-              sed -i 's/tag: .*/tag: "${IMAGE_TAG}"/' values.yaml || true
-
-              git config user.email 'jenkins@ci.local'
-              git config user.name 'jenkins'
-
-              # Ensure remote is clean (no creds stored)
-              git remote set-url origin https://github.com/Dhanvikah/node-bulletin-board.git
-
-              git add values.yaml
-              git commit -m "ci: bump image tag to ${IMAGE_TAG}" || echo 'no changes to commit'
-
-              branch=\$(git rev-parse --abbrev-ref HEAD)
-
-              # Push using temporary Basic Auth header
-              git -c http.extraHeader="AUTHORIZATION: basic $(echo -n ${GIT_USER}:${GIT_TOKEN} | base64)" push origin HEAD:\$branch
+            script {
+              // Update tag in values.yaml
+              sh """
+                sed -i 's/tag: .*/tag: "${IMAGE_TAG}"/' values.yaml || true
               """
+
+              // Configure git
+              sh """
+                git config user.email 'jenkins@ci.local'
+                git config user.name 'jenkins'
+              """
+
+              // Add and commit changes
+              sh """
+                git add values.yaml
+                git commit -m "ci: bump image tag to ${IMAGE_TAG}" || echo 'no changes to commit'
+              """
+
+              // Determine branch name safely
+              def branch = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
+              if (branch == "HEAD") {
+                branch = sh(script: "git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'", returnStdout: true).trim()
+              }
+
+              // Push securely using Base64 auth
+              sh """
+                git -c http.extraHeader="AUTHORIZATION: basic \$(echo -n ${GIT_USER}:${GIT_TOKEN} | base64)" push origin HEAD:\$branch
+              """
+            }
           }
         }
       }
