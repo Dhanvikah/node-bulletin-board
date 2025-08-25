@@ -2,10 +2,10 @@ pipeline {
   agent any
 
   environment {
-    DOCKERHUB_CREDS = credentials('Docker-creds')  
-    GITHUB_CREDS    = credentials('Git-Creds')        
-    DOCKER_REPO     = "komall6/node-bulletin-board"
-    IMAGE_TAG       = "${env.BUILD_NUMBER}-${env.GIT_COMMIT?.substring(0,7)}"
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+    GITHUB_CREDS = credentials('github-creds')
+    IMAGE_NAME = "dhanvikah/node-bulletin-board"
+    IMAGE_TAG = "${BUILD_NUMBER}-${GIT_COMMIT.take(7)}"
   }
 
   stages {
@@ -17,19 +17,19 @@ pipeline {
 
     stage('Build Docker image') {
       steps {
-        sh "docker build -t ${DOCKER_REPO}:${IMAGE_TAG} -f bulletin-board-app/Dockerfile bulletin-board-app"
+        script {
+          sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest -f bulletd-board-app/Dockerfile bulletd-board-app"
+        }
       }
     }
 
-    stage('Login & Push Docker image') {
+    stage('Push Docker image') {
       steps {
-        sh """
-          echo ${DOCKERHUB_CREDS_PSW} | docker login -u ${DOCKERHUB_CREDS_USR} --password-stdin
-          docker push ${DOCKER_REPO}:${IMAGE_TAG}
-          docker tag ${DOCKER_REPO}:${IMAGE_TAG} ${DOCKER_REPO}:latest
-          docker push ${DOCKER_REPO}:latest
-          docker logout
-        """
+        withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+          sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+          sh "docker push ${IMAGE_NAME}:latest"
+        }
       }
     }
 
@@ -45,15 +45,19 @@ pipeline {
 
           sh "git add values.yaml"
           sh "git commit -m 'ci: bump image tag to ${IMAGE_TAG}' || echo 'no changes to commit'"
+
           script {
             def branch = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
             sh "git push origin HEAD:${branch}"
+          }
         }
       }
     }
-  }
 
-  post {
-    always { cleanWs() }
+    stage('Trigger ArgoCD Sync') {
+      steps {
+        sh "argocd app sync node-bulletin-board || true"
+      }
+    }
   }
 }
