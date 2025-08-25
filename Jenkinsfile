@@ -2,10 +2,7 @@ pipeline {
     agent any
 
     environment {
-        S3_BUCKET = 'demoacbdweb'
-        AWS_DEFAULT_REGION = 'us-east-1'
-        DOCKER_REGISTRY = 'https://index.docker.io'
-        DOCKER_CREDENTIALS_ID = 'Docker-creds'
+        DOCKER_CREDENTIALS_ID = 'Docker-creds'  
         GITHUB_CREDENTIALS_ID = 'Git-Creds'
         IMAGE_NAME = 'komall6/node-bulletin-board'
         IMAGE_TAG = "${BUILD_NUMBER}"
@@ -13,12 +10,12 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout Code') {
             steps {
-                git(
+                git branch: 'master',
                     url: 'https://github.com/Dhanvikah/node-bulletin-board.git',
                     credentialsId: "${GITHUB_CREDENTIALS_ID}"
-                )
             }
         }
 
@@ -31,15 +28,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 script {
-                    def testOutput = sh(
-                        script: "npm run --prefix ${APP_DIR} | grep -q test",
-                        returnStatus: true
-                    )
-                    if (testOutput != 0) {
-                        echo "No tests defined or tests failed"
-                    } else {
-                        echo "Tests passed"
-                    }
+                    sh "npm test --prefix ${APP_DIR} || echo 'No tests defined or failed, skipping...'"
                 }
             }
         }
@@ -47,8 +36,13 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 script {
-                    withDockerRegistry([credentialsId: "${DOCKER_CREDENTIALS_ID}", url: "${DOCKER_REGISTRY}"]) {
+                    withCredentials([usernamePassword(
+                        credentialsId: "${DOCKER_CREDENTIALS_ID}", 
+                        usernameVariable: 'DOCKER_USERNAME', 
+                        passwordVariable: 'DOCKER_PASSWORD')]) {
+
                         sh """
+                        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
                         docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ./${APP_DIR}
                         docker push ${IMAGE_NAME}:${IMAGE_TAG}
                         """
@@ -59,7 +53,7 @@ pipeline {
 
         stage('Deploy to Kubernetes via Helm & ArgoCD') {
             steps {
-                echo "Skipped for now, implement as needed"
+                echo "Deployment stage ready. Add Helm/ArgoCD commands here."
             }
         }
     }
@@ -67,6 +61,12 @@ pipeline {
     post {
         always {
             cleanWs()
+        }
+        success {
+            echo "Pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed. Check logs for errors."
         }
     }
 }
