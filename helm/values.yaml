@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: komall6/node-bulletin-board
-  tag: "v2"
+  tag: "25-abcdef0"
   pullPolicy: IfNotPresent
 
 service:
