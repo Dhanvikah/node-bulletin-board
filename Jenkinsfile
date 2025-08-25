@@ -4,7 +4,7 @@ pipeline {
   environment {
     DOCKERHUB_CREDENTIALS = credentials('Docker-creds')
     GITHUB_CREDS = credentials('Git-Creds')
-    IMAGE_NAME = "dhanvikah/node-bulletin-board"
+    IMAGE_NAME = "komall6/node-bulletin-board"
     IMAGE_TAG = "${BUILD_NUMBER}-${GIT_COMMIT.take(7)}"
   }
 
