@@ -41,7 +41,7 @@ pipeline {
           sh "git config user.email 'jenkins@ci.local' || true"
           sh "git config user.name 'jenkins' || true"
 
-          sh "git remote set-url origin https://${GITHUB_CREDS_USR}:${GITHUB_CREDS_PSW}@github.com/${GITHUB_CREDS_USR}/node-bulletin-board.git"
+          sh "git remote set-url origin https://github.com/Dhanvikah/node-bulletin-board.git"
 
           sh "git add values.yaml"
           sh "git commit -m 'ci: bump image tag to ${IMAGE_TAG}' || echo 'no changes to commit'"
