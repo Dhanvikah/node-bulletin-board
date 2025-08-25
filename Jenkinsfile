@@ -22,9 +22,10 @@ pipeline {
 
     stage('Build Docker image') {
       steps {
-        sh "docker build -t ${DOCKER_REPO}:${IMAGE_TAG} ."
+        sh "docker build -t ${DOCKER_REPO}:${IMAGE_TAG} -f bulletin-board-app/Dockerfile bulletin-board-app"
       }
     }
+
 
     stage('Login & Push Docker image') {
       steps {
