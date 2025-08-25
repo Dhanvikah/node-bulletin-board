@@ -47,13 +47,13 @@ pipeline {
               git remote set-url origin https://github.com/Dhanvikah/node-bulletin-board.git
 
               git add values.yaml
-              git commit -m 'ci: bump image tag to ${IMAGE_TAG}' || echo 'no changes to commit'
+              git commit -m "ci: bump image tag to ${IMAGE_TAG}" || echo 'no changes to commit'
 
               branch=\$(git rev-parse --abbrev-ref HEAD)
 
               # Push using temporary Basic Auth header
               git -c http.extraHeader="AUTHORIZATION: basic $(echo -n ${GIT_USER}:${GIT_TOKEN} | base64)" push origin HEAD:\$branch
-            """
+              """
           }
         }
       }
